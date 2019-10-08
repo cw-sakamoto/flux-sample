@@ -1,7 +1,4 @@
 ---
 apiVersion: v1
 kind: Namespace
-metadata:
-  name: flux
-  annotations:
-    iam.amazonaws.com/permitted: ".*"
+metadata: {name: flux}
