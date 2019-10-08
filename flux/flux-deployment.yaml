@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: flux
   namespace: flux
+  annotations:
+    fluxcd.io/automated: "true"
 spec:
   replicas: 1
   selector:
@@ -131,7 +133,7 @@ spec:
         # Include these two to enable git commit signing
         # - --git-gpg-key-import=/root/gpg-import
         # - --git-signing-key=<key id>
-        
+
         # Include this to enable git signature verification
         # - --git-verify-signatures
 
