@@ -64,7 +64,7 @@ spec:
         # There are no ":latest" images for flux. Find the most recent
         # release or image version at https://hub.docker.com/r/weaveworks/flux/tags
         # and replace the tag here.
-        image: docker.io/fluxcd/flux:1.13.3
+        image: docker.io/fluxcd/flux:1.15.0
         imagePullPolicy: IfNotPresent
         resources:
           requests:
@@ -131,7 +131,7 @@ spec:
         # Include these two to enable git commit signing
         # - --git-gpg-key-import=/root/gpg-import
         # - --git-signing-key=<key id>
-        
+
         # Include this to enable git signature verification
         # - --git-verify-signatures
 
