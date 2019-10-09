@@ -4,8 +4,6 @@ kind: Deployment
 metadata:
   name: flux
   namespace: flux
-  annotations:
-    fluxcd.io/automated: "true"
 spec:
   replicas: 1
   selector:
@@ -38,7 +36,7 @@ spec:
       # file, which you will need to do if you host your own git
       # repo rather than using github or the like. You'll also need to
       # mount it into the container, below. See
-      # https://github.com/weaveworks/flux/blob/master/site/standalone-setup.md#using-a-private-git-host
+      # https://docs.fluxcd.io/en/latest/guides/use-private-git-host.html
       # - name: ssh-config
       #   configMap:
       #     name: flux-ssh-config
@@ -64,9 +62,9 @@ spec:
       containers:
       - name: flux
         # There are no ":latest" images for flux. Find the most recent
-        # release or image version at https://hub.docker.com/r/weaveworks/flux/tags
+        # release or image version at https://hub.docker.com/r/fluxcd/flux/tags
         # and replace the tag here.
-        image: docker.io/fluxcd/flux:1.13.3
+        image: docker.io/fluxcd/flux:1.15.0
         imagePullPolicy: IfNotPresent
         resources:
           requests:
@@ -74,6 +72,18 @@ spec:
             memory: 64Mi
         ports:
         - containerPort: 3030 # informational
+        livenessProbe:
+          httpGet:
+            port: 3030
+            path: /api/flux/v6/identity.pub
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            port: 3030
+            path: /api/flux/v6/identity.pub
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
         volumeMounts:
         - name: git-key
           mountPath: /etc/fluxd/ssh # to match location given in image's /etc/ssh/config
@@ -105,6 +115,13 @@ spec:
         #   mountPath: /root/gpg-import
         #   readOnly: true
 
+        # Include this if you want to supply HTTP basic auth credentials for git
+        # via the `GIT_AUTHUSER` and `GIT_AUTHKEY` environment variables using a
+        # secret.
+        # envFrom:
+        # - secretRef:
+        #     name: flux-git-auth
+
         args:
 
         # If you deployed memcached in a different namespace to flux,
@@ -121,9 +138,11 @@ spec:
         - --ssh-keygen-dir=/var/fluxd/keygen
 
         # Replace the following URL to change the Git repository used by Flux.
+        # HTTP basic auth credentials can be supplied using environment variables:
+        # https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@github.com/user/repository.git
         - --git-url=git@github.com:cw-sakamoto/flux-sample.git
         - --git-branch=master
-        # include this if you want to restrict the manifests considered by flux
+        # Include this if you want to restrict the manifests considered by flux
         # to those under the following relative paths in the git repository
         # - --git-path=subdir1,subdir2
         - --git-label=flux
@@ -133,9 +152,15 @@ spec:
         # Include these two to enable git commit signing
         # - --git-gpg-key-import=/root/gpg-import
         # - --git-signing-key=<key id>
-
+        
         # Include this to enable git signature verification
         # - --git-verify-signatures
+
+        # Tell flux it has readonly access to the repo (default `false`)
+        # - --git-readonly
+
+        # Instruct flux where to put sync bookkeeping (default "git", meaning use a tag in the upstream git repo)
+        # - --sync-state=git
 
         # Include these next two to connect to an "upstream" service
         # (e.g., Weave Cloud). The token is particular to the service.
